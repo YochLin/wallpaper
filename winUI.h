@@ -48,6 +48,8 @@ private:
     
     void createGiFWallPaper(const QString &dir);
     void createImageWallPaper(const QStringList &dir);
+    void helpDialog();
+    void removeWallPaper();
     void initSystemTray();
     void selectFiles();
     bool load();

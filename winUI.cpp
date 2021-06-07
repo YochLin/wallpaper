@@ -64,17 +64,24 @@ WINUI::WINUI(QWidget *parent)
 
     initSystemTray();
 
+    connect(settingAction, &QAction::triggered, this, &WINUI::show);
+    connect(helpAction, &QAction::triggered, this, &WINUI::helpDialog);
+    connect(exitAction, &QAction::triggered, [=](){
+        QApplication::exit(0);
+    });
     connect(ui->actionLoad, &QAction::triggered, this, &WINUI::selectFiles);
     connect(ui->wallerpaper, &QPushButton::clicked, this, &WINUI::load);
-    connect(ui->actionExit, &QAction::triggered, this, &QWidget::close);
+    connect(ui->actionExit, &QAction::triggered, [=](){
+        QApplication::exit(0);
+    });
 }
 
 WINUI::~WINUI()
 {    
-    delete ui;
+    // delete ui;
 
-    delete gifLabel;
-    delete imgLabel;
+    // delete gifLabel;
+    // delete imgLabel;
 }
 
 void WINUI::initSystemTray()
@@ -104,12 +111,34 @@ void WINUI::initSystemTray()
     
     pSystemTray->show();
 
-    pSystemTray->showMessage(QString::fromUtf8("標題"), QString::fromUtf8("內容"));
+    pSystemTray->showMessage(QString::fromUtf8("動態桌布"), QString::fromUtf8("可以使用我來更改桌布唷!!"));
 
 
     connect(exitAction, &QAction::triggered, [=](){
         QApplication::exit(0);
     });
+}
+
+void WINUI::helpDialog()
+{
+    QMessageBox message(this);
+
+    message.setWindowTitle(QString::fromUtf8("動態桌布"));
+    message.setWindowIcon(QIcon("./icon/icon.png"));
+    message.setText(QString::fromUtf8("測試~~\n"
+                                      "這是一款簡易的動態桌布程式，目前只能應用在windows上\n"
+                                      "透過 load 就能將想要的影像放入桌布，多選取影像即能有動態效果"));
+    message.exec();
+
+}
+
+void WINUI::removeWallPaper()
+{
+    delete gifLabel;
+    delete imgLabel;
+
+    images.clear();
+    imageIndex = 0;
 }
 
 void WINUI::selectFiles()
@@ -127,7 +156,7 @@ void WINUI::selectFiles()
     QStringList formatLists;
     formatLists.append("一般影像(*.jpg *.jpeg *.png *.bmp)");
     formatLists.append("動態影像(*.gif)");
-    fileLoad.setFileMode(QFileDialog::ExistingFile);
+    fileLoad.setFileMode(QFileDialog::ExistingFiles);
     fileLoad.setNameFilters(formatLists);
 
     if(fileLoad.exec() == QFileDialog::Accepted)
@@ -143,6 +172,8 @@ bool WINUI::load()
     {
         return false;
     }
+
+    removeWallPaper();
 
     if(filePaths.at(0).endsWith(QStringLiteral(".gif"), Qt::CaseInsensitive))
     {
@@ -220,8 +251,8 @@ void WINUI::createImageWallPaper(const QStringList &dir)
         imgLabel = new QLabel();
         imgLabel->installEventFilter(this);
         imgLabel->setWindowFlag(Qt::FramelessWindowHint);
-        imgLabel->setScaledContents(true);
         imgLabel->setPixmap(images.at(0));
+        imgLabel->setScaledContents(true);
         imgLabel->showFullScreen();
         // setParent((HWND)imgLabel->winId(), findDesktopWindow());
         imgLabel->show();
