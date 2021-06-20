@@ -35,6 +35,7 @@ private:
     Ui::WINUI *ui;
     QLabel *gifLabel;
     QLabel *imgLabel;
+    QTimer *timer;
     int imageIndex;
     QStringList filePaths;
     QList<QPixmap> images;

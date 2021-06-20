@@ -3,11 +3,6 @@
 #include <winuser.h>
 #include <QPushButton>
 
-HWND findDesktopWindow()
-{
-    return FindWindow(_T("ProgMan"), _T("Program Manger"));
-}
-
 BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam)
 {
     HWND p = FindWindowEx(hwnd, NULL, _T("SHELLDLL_DefView"), NULL);
@@ -32,7 +27,7 @@ HWND getWindow()
 
     HWND wallpaper_hwnd = nullptr;
     EnumWindows(EnumWindowsProc, (LPARAM)&wallpaper_hwnd);
-    qDebug() << wallpaper_hwnd;
+    // qDebug() << wallpaper_hwnd;
     return wallpaper_hwnd;
 }
 
@@ -56,7 +51,7 @@ void taskBarHide(bool hide)
 
 WINUI::WINUI(QWidget *parent)
     : QMainWindow(parent)
-    , ui(new Ui::WINUI)
+    , ui(new Ui::WINUI), gifLabel(nullptr), imgLabel(nullptr), timer(nullptr)
 {
     ui->setupUi(this);
     
@@ -136,9 +131,13 @@ void WINUI::removeWallPaper()
 {
     delete gifLabel;
     delete imgLabel;
+    delete timer;
 
     images.clear();
     imageIndex = 0;
+
+    gifLabel = nullptr;
+    imgLabel = nullptr;
 }
 
 void WINUI::selectFiles()
@@ -178,6 +177,7 @@ bool WINUI::load()
     if(filePaths.at(0).endsWith(QStringLiteral(".gif"), Qt::CaseInsensitive))
     {
         createGiFWallPaper(filePaths.at(0));
+        ui->speedBox->setEnabled(false);
     }
     else if(filePaths.at(0).endsWith(QStringLiteral(".jpg"), Qt::CaseInsensitive)
         ||  filePaths.at(0).endsWith(QStringLiteral(".jpeg"), Qt::CaseInsensitive)
@@ -185,6 +185,7 @@ bool WINUI::load()
         ||  filePaths.at(0).endsWith(QStringLiteral(".bmp"), Qt::CaseInsensitive))
     {
         createImageWallPaper(filePaths);
+        ui->speedBox->setEnabled(true);
     }
     return true;
 }
@@ -229,7 +230,7 @@ void WINUI::createGiFWallPaper(const QString &dir)
     gifLabel->setScaledContents(true);
     gifLabel->showFullScreen();
     gif->setParent(gifLabel);
-    SetParent((HWND)gifLabel->winId(), findDesktopWindow());
+    SetParent((HWND)gifLabel->winId(), getWindow());
     gifLabel->show();
     gif->start();
 }
@@ -254,12 +255,13 @@ void WINUI::createImageWallPaper(const QStringList &dir)
         imgLabel->setPixmap(images.at(0));
         imgLabel->setScaledContents(true);
         imgLabel->showFullScreen();
-        // setParent((HWND)imgLabel->winId(), findDesktopWindow());
+        SetParent((HWND)imgLabel->winId(), getWindow());
         imgLabel->show();
 
+        timer = new QTimer();
         if(images.count() > 1)
         {
-            QTimer *timer = new QTimer(imgLabel);
+            
 
             connect(timer, &QTimer::timeout, [=](){
                 imgLabel->setPixmap(images.at(imageIndex));
@@ -270,10 +272,10 @@ void WINUI::createImageWallPaper(const QStringList &dir)
                 if(timer != nullptr)
                 {
                     timer->stop();
-                    timer->start(speed * 1000);
+                    timer->start(speed * 10);
                 }
             });
-            timer->start(ui->speedBox->value() * 1000);
+            timer->start(ui->speedBox->value() * 10);
         }
     }
 }
