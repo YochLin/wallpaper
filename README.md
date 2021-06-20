@@ -1,5 +1,4 @@
 # WallPaper
-It's simple Windows dynamic wallpaper demo, now has some problem need to fix.
 
 ## Environment
 1. Windows 10
